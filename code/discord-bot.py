@@ -6,13 +6,12 @@ import re
 import sys
 
 from datetime           import datetime,timedelta
-from termcolor          import colored
 
 # Shorted definition for actual now() with proper format
 def mynow(): return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 # Log Discord imports
-print('{} [{}] {} [{}]'.format(mynow(),'BOT', 'System   imports finished', colored('✓', 'green')))
+print(f'{mynow()} [BOT] System   imports [✓]')
 
 import asyncio
 import discord
@@ -21,7 +20,7 @@ import inspect
 from discord.ext        import commands
 
 # Log Discord imports
-print('{} [{}] {} [{}]'.format(mynow(),'BOT', 'Discord  imports finished', colored('✓', 'green')))
+print(f'{mynow()} [BOT] Discord  imports [✓]')
 
 from mysql.methods      import *
 from mysql.utils        import redis
@@ -32,26 +31,26 @@ from utils.histograms   import draw
 from mysql.methods.fn_creature import fn_creature_get
 from mysql.methods.fn_user     import fn_user_get_from_member
 
-# Log Discord imports
-print('{} [{}] {} [{}]'.format(mynow(),'BOT', 'Internal imports finished', colored('✓', 'green')))
+# Log Internal imports
+print(f'{mynow()} [BOT] Internal imports [✓]')
 
 client = commands.Bot(command_prefix = '!')
 
 # Welcome message in the logs on daemon start
-print('{} [{}] {} [{}]'.format(mynow(),'BOT', 'Daemon started', colored('✓', 'green')))
-# Pre-flich check for SQL connection
-if query_up(): tick = colored('✓', 'green')
-else         : tick = colored('✗', 'red')
-print('{} [{}] {} [{}]'.format(mynow(),'BOT', 'SQL connection', tick))
+print(f'{mynow()} [BOT] Daemon started   [✓]')
+# Pre-flight check for SQL connection
+if query_up(): tick = '✓'
+else         : tick = '✗'
+print(f'{mynow()} [BOT] SQL connection   [{tick}]')
 
 @client.event
 async def on_ready():
     channel = discord.utils.get(client.get_all_channels(), name='singouins')
     if channel:
-        tick = colored('✓', 'green')
+        tick = '✓'
         #await channel.send(msg_ready)
-    else: tick = colored('✗', 'red')
-    print('{} [{}] {}  [{}]'.format(mynow(),'BOT', 'Discord ready', tick))
+    else: tick = '✗'
+    print(f'{mynow()} [BOT] Discord ready    [{tick}]')
 
 #
 # Commands
