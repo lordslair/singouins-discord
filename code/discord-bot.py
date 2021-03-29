@@ -46,7 +46,7 @@ print('{} [{}] {} [{}]'.format(mynow(),'BOT', 'SQL connection', tick))
 
 @client.event
 async def on_ready():
-    channel = discord.utils.get(client.get_all_channels(), name='admins')
+    channel = discord.utils.get(client.get_all_channels(), name='singouins')
     if channel:
         tick = colored('✓', 'green')
         #await channel.send(msg_ready)
