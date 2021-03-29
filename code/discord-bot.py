@@ -236,6 +236,7 @@ async def admin(ctx,*args):
         elif action == 'help':
             print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Sent Helper')
             await ctx.send('`!admin <wallet> {get} {all} {pcid}`')
+    # Histogram commands
     elif args[0] == 'histogram':
         # We need exactly 2 args : !admin {histogram} {CL|CR}
         if len(args) < 2:
@@ -259,6 +260,37 @@ async def admin(ctx,*args):
             if answer:
                 await ctx.send(answer)
                 print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Histogram sent')
+    # Discord Commands
+    elif args[0] == 'discord':
+        # We need exactly 4 args : !admin {wallet} {get} {all} {pcid}
+        if len(args) < 3:
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Args failure')
+            await ctx.send(f'`!admin <discord> needs more arguments`')
+            return
+
+        action = args[1]
+
+        try:
+            amount = int(args[2])
+        except:
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Amount:{args[2]} is not an integer')
+            await ctx.send('`Amount given was not an integer`')
+            return
+        else:
+            pass
+
+        if action == 'delete':
+            print(f'{mynow()} [{ctx.message.channel}][{member}] ├──> Messages deletion ({amount}) received')
+
+            try:
+                await ctx.channel.purge(limit=amount)
+            except:
+                print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Messages deletion ({amount}) failed')
+            else:
+                print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Messages deletion ({amount}) Successful')
+        elif action == 'help':
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Sent Helper')
+            await ctx.send('`!admin discord {delete} {integer}`')
 
 #
 # Commands for Singouins
