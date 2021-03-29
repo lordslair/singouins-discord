@@ -1,16 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf8 -*-
 
-import os
-import re
-import sys
-
 from datetime           import datetime,timedelta
 
 # Shorted definition for actual now() with proper format
 def mynow(): return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-# Log Discord imports
+# Log System imports
 print(f'{mynow()} [BOT] System   imports [✓]')
 
 import asyncio
