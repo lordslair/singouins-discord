@@ -424,6 +424,7 @@ async def mysingouin(ctx, action: str = None):
         # In DM
         print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Sent Helper (Wrong channel)')
         await ctx.message.author.send(msg_mysquad_helper_dm)
+        return
     else:
         # In a Channel
         pass
