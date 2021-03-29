@@ -162,8 +162,8 @@ async def register(ctx):
 async def histo(ctx,arg):
     member       = ctx.message.author
     discordname  = member.name + '#' + member.discriminator
-    adminrole    = discord.utils.get(member.guild.roles, name='Admins')
-    adminchannel = discord.utils.get(client.get_all_channels(), name='admins')
+    adminrole    = discord.utils.get(member.guild.roles, name='Team')
+    adminchannel = discord.utils.get(client.get_all_channels(), name='singouins-team')
 
     if adminrole in ctx.author.roles and ctx.message.channel == adminchannel:
         # This command is to be used only by Admin role
