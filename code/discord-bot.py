@@ -157,35 +157,11 @@ async def register(ctx):
 #
 # Commands for Admins
 #
-
-@client.command(pass_context=True)
-async def histo(ctx,arg):
-    member       = ctx.message.author
-    discordname  = member.name + '#' + member.discriminator
-    adminrole    = discord.utils.get(member.guild.roles, name='Team')
-    adminchannel = discord.utils.get(client.get_all_channels(), name='singouins-team')
-
-    if adminrole in ctx.author.roles and ctx.message.channel == adminchannel:
-        # This command is to be used only by Admin role
-        # This command is to be used only in #admins
-        print('{} [{}][{}] !histo <{}>'.format(mynow(),member,ctx.message.channel,arg))
-
-        # We'll draw a chart with Creatures Level occurences
-        array  = query_histo(arg)
-        answer = draw(array)
-        if answer:
-            await ctx.send(answer)
-            print('{} [{}][{}] └> Histogram sent'.format(mynow(),member,ctx.message.channel,arg))
-        else:
-            print('{} [{}][{}] └> I failed (._.) '.format(mynow(),member,ctx.message.channel,arg))
-    else:
-        await ctx.send(f'You need to have the role {adminrole.name}')
-
-@client.command(pass_context=True)
+@client.command(pass_context=True,name='admin', help='Admin master-command [RESTRICTED]')
 async def admin(ctx,*args):
     member       = ctx.message.author
     discordname  = member.name + '#' + member.discriminator
-    adminrole    = discord.utils.get(member.guild.roles, name='Admins')
+    adminrole    = discord.utils.get(member.guild.roles, name='Team')
 
     if adminrole not in ctx.author.roles:
         # This command is to be used only by Admin role
@@ -194,25 +170,29 @@ async def admin(ctx,*args):
     # Channel and User are OK
     print('{} [{}][{}] !admin <{}>'.format(mynow(),ctx.message.channel,member,args))
 
-    if args[0] == 'help':
-        await ctx.send(f'```{msg_cmd_admin_help}```')
+    if len(args) == 0:
+        print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Args failure')
+        await ctx.send('`!admin needs arguments`')
         return
 
-    if len(args) < 4:
-        await ctx.send('`!admin needs more arguments`')
-        return
+    # PA commands
+    if args[0] == 'pa':
+        # We need exactly 4 args : !admin {pa} {action} {select} {pcid}
+        if len(args) < 4:
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Args failure')
+            await ctx.send('`!admin <pa> needs more arguments`')
+            return
 
-    module = args[0]
-    action = args[1]
-    select = args[2]
-    pcid   = int(args[3])
+        action = args[1]
+        select = args[2]
+        pcid   = int(args[3])
 
-    pc = fn_creature_get(None,pcid)[3]
-    if pc is None:
-        await ctx.send(f'`Unknown creature pcid:{pcid}`')
-        return
+        pc = fn_creature_get(None,pcid)[3]
+        if pc is None:
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Unknown creature')
+            await ctx.send(f'`Unknown creature pcid:{pcid}`')
+            return
 
-    if module == 'redis':
         if action == 'reset':
             if select == 'all':
                 redis.reset_pa(pc,True,True)
@@ -228,15 +208,57 @@ async def admin(ctx,*args):
                 pa = redis.get_pa(pc)
                 await ctx.send(pa)
         elif action == 'help':
-            await ctx.send('`!admin redis {reset|get} {all|blue|red} {pcid}`')
-    if module == 'wallet':
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Sent Helper')
+            await ctx.send('`!admin pa {reset|get} {all|blue|red} {pcid}`')
+    # Wallet commands
+    elif args[0] == 'wallet':
+        # We need exactly 4 args : !admin {wallet} {get} {all} {pcid}
+        if len(args) < 4:
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Args failure')
+            await ctx.send(f'`!admin <wallet> needs more arguments`')
+            return
+
+        action = args[1]
+        select = args[2]
+        pcid   = int(args[3])
+
+        pc = fn_creature_get(None,pcid)[3]
+        if pc is None:
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Unknown creature')
+            await ctx.send(f'`Unknown creature pcid:{pcid}`')
+            return
+
         if action == 'get':
             if select == 'all':
                 wallet = query_wallet_get(pc)
                 if wallet:
                     await ctx.send(wallet)
         elif action == 'help':
-            await ctx.send('`!admin wallet {get} {all} {pcid}`')
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Sent Helper')
+            await ctx.send('`!admin <wallet> {get} {all} {pcid}`')
+    elif args[0] == 'histogram':
+        # We need exactly 2 args : !admin {histogram} {CL|CR}
+        if len(args) < 2:
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Args failure')
+            await ctx.send('`!admin <histogram> needs more arguments`')
+            return
+
+        htype  = args[1]
+
+        if htype == 'help':
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Sent Helper')
+            await ctx.send('`!admin histogram {CL|CR}`')
+
+        try:
+            array  = query_histo(htype)
+            answer = draw(array)
+        except:
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Histogram creation failed')
+        else:
+            print(f'{mynow()} [{ctx.message.channel}][{member}] ├──> Histogram creation Successful')
+            if answer:
+                await ctx.send(answer)
+                print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Histogram sent')
 
 #
 # Commands for Singouins
