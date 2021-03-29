@@ -27,13 +27,13 @@ bluemaxttl     = bluepaduration * bluepamax
 
 def get_pa(pc):
 
-    redkey    = str(pc.id) + '-red'
+    redkey    = f'red:{pc.id}'
     redttl    = r.ttl(redkey)
     redpa     = int(round(((redmaxttl - abs(redttl))  / redpaduration)))
     redttnpa  = r.ttl(redkey) % redpaduration
     redbar    = redpa*'🟥' + (redpamax-redpa)*'⬜'
 
-    bluekey   = str(pc.id) + '-blue'
+    bluekey   = f'blue:{pc.id}'
     bluettl   = r.ttl(bluekey)
     bluepa    = int(round(((bluemaxttl - abs(bluettl))  / bluepaduration)))
     bluettnpa = r.ttl(bluekey) % bluepaduration
@@ -47,6 +47,6 @@ def get_pa(pc):
 def reset_pa(pc,blue,red):
 
     if red:
-        r.set(str(pc.id) + '-red','red',ex=1)
+        r.set(f'red:{pc.id}','red',ex=1)
     if blue:
-        r.set(str(pc.id) + '-blue','blue',ex=1)
+        r.set(f'blue:{pc.id}','blue',ex=1)
