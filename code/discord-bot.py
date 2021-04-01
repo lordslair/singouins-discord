@@ -11,7 +11,6 @@ print(f'{mynow()} [BOT] System   imports [✓]')
 
 import asyncio
 import discord
-import inspect
 
 from discord.ext        import commands
 
