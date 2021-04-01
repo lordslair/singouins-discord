@@ -6,3 +6,4 @@ redis                     ~= 3.5
 requests                  ~= 2.25
 SQLAlchemy                ~= 1.3
 termcolor                 ~= 1.1
+yarqueue                  == 0.4.1
