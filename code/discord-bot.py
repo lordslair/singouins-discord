@@ -485,11 +485,6 @@ async def mysingouin(ctx, action: str = None):
         admin_role    = discord.utils.get(guild.roles, name='Team')
         category      = discord.utils.get(guild.categories, name='Squads')
         squads        = query_squads_get(member)
-        overwrites    = {
-            guild.default_role: discord.PermissionOverwrite(read_messages=False),
-            guild.me: discord.PermissionOverwrite(read_messages=True),
-            admin_role: discord.PermissionOverwrite(read_messages=True)
-        }
 
         if squads[3] is not None:
             print(f'{mynow()} [{ctx.message.channel}][{member}] ├──> Received Squads infos ({squads[3]})')
@@ -502,22 +497,6 @@ async def mysingouin(ctx, action: str = None):
 
         for squadid in squadset:
             print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Squad detected (squadid:{squadid})')
-
-            # Check channel existance
-            if discord.utils.get(category.channels, name=f'Squad-{squadid}'.lower()):
-                # Channel already exists, do nothing
-                print(f'{mynow()} [{ctx.message.channel}][{member}]    ├──> Squad channel already exists (Squads/Squad-{squadid})')
-            else:
-                # Channel do not exist, create it
-                try:
-                    mysquadchannel = await guild.create_text_channel(f'Squad-{squadid}',
-                                                                     category=category,
-                                                                     topic=f'Squad-{squadid} private channel',
-                                                                     overwrites=overwrites)
-                except:
-                    print(f'{mynow()} [{ctx.message.channel}][{member}]    ├──> Squad channel creation failed (squadid:{squadid})')
-                else:
-                    print(f'{mynow()} [{ctx.message.channel}][{member}]    ├──> Squad channel created (Squads/Squad-{squadid})')
 
             # Check role existence
             if discord.utils.get(guild.roles, name=f'Squad-{squadid}'):
@@ -533,6 +512,29 @@ async def mysingouin(ctx, action: str = None):
                     print(f'{mynow()} [{ctx.message.channel}][{member}]    └──> Squad role creation failed (squadid:{squadid})')
                 else:
                     print(f'{mynow()} [{ctx.message.channel}][{member}]    └──> Squad role creation successed (squadid:{squadid})')
+
+            # Check channel existance
+            if discord.utils.get(category.channels, name=f'Squad-{squadid}'.lower()):
+                # Channel already exists, do nothing
+                print(f'{mynow()} [{ctx.message.channel}][{member}]    ├──> Squad channel already exists (Squads/Squad-{squadid})')
+            else:
+                # Channel do not exist, create it
+                try:
+                    squad_role    = discord.utils.get(guild.roles, name=f'Squad-{squadid}')
+                    overwrites    = {
+                        guild.default_role: discord.PermissionOverwrite(read_messages=False),
+                        guild.me: discord.PermissionOverwrite(read_messages=True),
+                        admin_role: discord.PermissionOverwrite(read_messages=True),
+                        squad_role: discord.PermissionOverwrite(read_messages=True)
+                    }
+                    mysquadchannel = await guild.create_text_channel(f'Squad-{squadid}',
+                                                                     category=category,
+                                                                     topic=f'Squad-{squadid} private channel',
+                                                                     overwrites=overwrites)
+                except:
+                    print(f'{mynow()} [{ctx.message.channel}][{member}]    ├──> Squad channel creation failed (squadid:{squadid})')
+                else:
+                    print(f'{mynow()} [{ctx.message.channel}][{member}]    ├──> Squad channel created (Squads/Squad-{squadid})')
 
     elif action == 'grant':
         guild      = ctx.guild
