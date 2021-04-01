@@ -568,4 +568,30 @@ async def mysingouin(ctx, action: str = None):
 async def on_member_join(member):
     await member.send(msg_welcome)
 
+#
+# Tasks definition
+#
+
+async def yqueue_check_60s():
+    while client.is_ready:
+        # Opening Queue
+        try:
+            yqueue_name = 'discord'
+            msgs        = redis.yqueue_get(yqueue_name)
+        except Exception as e:
+            print(f'{mynow()} [BOT] Unable to retrieve data from yarqueue:{yqueue_name}')
+        else:
+            for msg in msgs:
+                channel = discord.utils.get(client.get_all_channels(), name=msg['scope'].lower())
+                if channel:
+                    try:
+                        await channel.send(msg['payload'])
+                    except:
+                        print(f'{mynow()} [{channel.name}][BOT] ───> Message from yarqueue:{yqueue_name}')
+                    else:
+                        print(f'{mynow()} [{channel.name}][BOT] ───> Message from yarqueue:{yqueue_name}')
+
+        await asyncio.sleep(60) # task runs every 60 seconds / 1 minute
+
+client.loop.create_task(yqueue_check_60s())
 client.run(token)

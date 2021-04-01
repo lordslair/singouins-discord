@@ -1,6 +1,8 @@
 # -*- coding: utf8 -*-
 
+import json
 import redis
+import yarqueue
 
 from datetime  import datetime
 
@@ -50,3 +52,26 @@ def reset_pa(pc,blue,red):
         r.set(f'red:{pc.id}','red',ex=1)
     if blue:
         r.set(f'blue:{pc.id}','blue',ex=1)
+
+#
+# Queries: Queues
+#
+
+def yqueue_get(yqueue_name):
+    # Opening Queue
+    try:
+        yqueue = yarqueue.Queue(name=yqueue_name, redis=r)
+    except:
+        print(f'Connection to yarqueue:{yqueue_name} [KO]')
+    else:
+        pass
+
+    # Get data from Queue
+    try:
+        msgs = []
+        for msg in yqueue:
+            msgs.append(json.loads(msg))
+    except:
+        print(f'Failed to get messages from yarqueue:{yqueue_name} [KO]')
+    else:
+        return msgs
