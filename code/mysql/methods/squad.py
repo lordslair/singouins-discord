@@ -46,3 +46,47 @@ def query_squads_get(member):
                 {"leader": leader, "member": member})
     finally:
         session.close()
+
+def query_squads_get_all():
+    session  = Session()
+
+    try:
+        squads = session.query(Squad).all()
+    except Exception as e:
+        # Something went wrong during query
+        return (200,
+                False,
+                '[SQL] Squads query failed',
+                None)
+    else:
+        return (200,
+                True,
+                'Squads found',
+                squads)
+    finally:
+        session.close()
+
+def query_squad_get(squadid):
+    session  = Session()
+
+    try:
+        squad = session.query(Squad).filter(Squad.id == squadid).one_or_none()
+    except Exception as e:
+        # Something went wrong during query
+        return (200,
+                False,
+                '[SQL] Squad query failed',
+                None)
+    else:
+        if squad:
+            return (200,
+                    True,
+                    f'Squad found (squadid:{squadid})',
+                    squad)
+        else:
+            return (200,
+                    False,
+                    f'Squad not found (squadid:{squadid})',
+                    None)
+    finally:
+        session.close()
