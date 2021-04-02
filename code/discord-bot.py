@@ -483,7 +483,7 @@ async def on_member_join(member):
 # Tasks definition
 #
 
-async def yqueue_check_60s():
+async def yqueue_check(timer):
     while client.is_ready:
         # Opening Queue
         try:
@@ -498,11 +498,11 @@ async def yqueue_check_60s():
                     try:
                         await channel.send(msg['payload'])
                     except:
-                        print(f'{mynow()} [{channel.name}][BOT] ───> Message from yarqueue:{yqueue_name}')
+                        print(f'{mynow()} [{channel.name}] [BOT] ───> Message from yarqueue:{yqueue_name}')
                     else:
-                        print(f'{mynow()} [{channel.name}][BOT] ───> Message from yarqueue:{yqueue_name}')
+                        print(f'{mynow()} [{channel.name}] [BOT] ───> Message from yarqueue:{yqueue_name}')
 
-        await asyncio.sleep(60) # task runs every 60 seconds / 1 minute
+        await asyncio.sleep(timer)
 
 async def squad_channel_cleanup(timer):
     while client.is_ready:
@@ -588,6 +588,6 @@ client.loop.create_task(squad_channel_cleanup(3600))
 # 300s Tasks (@5Minutes)
 client.loop.create_task(squad_channel_create(300))
 # 60s Tasks (@1Minute)
-client.loop.create_task(yqueue_check_60s())
+client.loop.create_task(yqueue_check(60))
 # Run Discord client
 client.run(token)
