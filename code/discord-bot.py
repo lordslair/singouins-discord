@@ -21,7 +21,7 @@ print(f'{mynow()} [BOT] Discord  imports [✓]')
 
 from mysql.methods      import *
 from mysql.utils        import redis
-from variables          import token
+from variables          import token, PCS_URL
 from utils.messages     import *
 from utils.histograms   import draw
 
@@ -494,13 +494,31 @@ async def yqueue_check(timer):
         else:
             for msg in msgs:
                 channel = discord.utils.get(client.get_all_channels(), name=msg['scope'].lower())
+                if msg['embed']:
+                    color_int  = msg['payload']['color_int']
+                    path       = msg['payload']['path']
+                    title      = msg['payload']['title']
+                    item       = msg['payload']['item']
+                    footer     = msg['payload']['footer']
+
+                    answer = None
+                    embed  = discord.Embed(color=color_int)
+                    embed.set_thumbnail(url=f'{PCS_URL}{path}')
+                    embed.add_field(name=title,
+                                    value=item,
+                                    inline=True)
+                    embed.set_footer(text=footer)
+                else:
+                    answer = msg['payload']
+                    embed  = None
+
                 if channel:
                     try:
-                        await channel.send(msg['payload'])
-                    except:
-                        print(f'{mynow()} [{channel.name}] [BOT] ───> Message from yarqueue:{yqueue_name}')
+                        await channel.send(answer, embed=embed)
+                    except Exception as e:
+                        print(f'{mynow()} [{channel.name}] [BOT] ───> Send message to channel:{channel.name} failed')
                     else:
-                        print(f'{mynow()} [{channel.name}] [BOT] ───> Message from yarqueue:{yqueue_name}')
+                        print(f'{mynow()} [{channel.name}] [BOT] ───> Send messag to channel:{channel.name} successed')
 
         await asyncio.sleep(timer)
 
