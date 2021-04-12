@@ -21,7 +21,7 @@ print(f'{mynow()} [BOT] Discord  imports [✓]')
 
 from mysql.methods      import *
 from mysql.utils        import redis
-from variables          import token, PCS_URL
+from variables          import *
 from utils.messages     import *
 from utils.histograms   import draw
 
@@ -38,7 +38,7 @@ print(f'{mynow()} [BOT] Daemon started   [✓]')
 # Pre-flight check for SQL connection
 if query_up(): tick = '✓'
 else         : tick = '✗'
-print(f'{mynow()} [BOT] SQL connection   [{tick}]')
+print(f'{mynow()} [BOT] SQL connection   [{tick}] ({MYSQL_USER}@{MYSQL_HOST}/{MYSQL_DB})')
 
 @client.event
 async def on_ready():
@@ -187,10 +187,10 @@ async def admin(ctx,*args):
 
     if adminrole not in ctx.author.roles:
         # This command is to be used only by Admin role
-        print('{} [{}][{}] !admin <{}> [{}]'.format(mynow(),ctx.message.channel,member,args,'Unauthorized user'))
+        print(f'{mynow()} [{ctx.message.channel}][{member}] !admin <{args}> [Unauthorized user]')
 
     # Channel and User are OK
-    print('{} [{}][{}] !admin <{}>'.format(mynow(),ctx.message.channel,member,args))
+    print(f'{mynow()} [{ctx.message.channel}][{member}] !admin <{args}>')
 
     if len(args) == 0:
         print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Args failure')
@@ -322,7 +322,7 @@ async def admin(ctx,*args):
 async def mysingouins(ctx):
     member       = ctx.message.author
 
-    print('{} [{}][{}] !mysingouins'.format(mynow(),ctx.message.channel,member))
+    print(f'{mynow()} [{ctx.message.channel}][{member}] !mysingouins')
 
     # Check if the command is used in a channel or a DM
     if isinstance(ctx.message.channel, discord.DMChannel):
@@ -336,7 +336,7 @@ async def mysingouins(ctx):
         except:
             pass
         else:
-            print('{} [{}][{}] └> Message deleted'.format(mynow(),ctx.message.channel,member))
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Message deleted')
         return
 
     emojiM = discord.utils.get(client.emojis, name='statM')
@@ -358,6 +358,8 @@ async def mysingouins(ctx):
     pcs = query_pcs_get(member)[3]
     if pcs is None:
         await ctx.send(f'`No Singouin found in DB`')
+        print(f'{mynow()} [{ctx.message.channel}][{member}] └──> No Singouin found in DB')
+        return
 
     mydesc = ''
     for pc in pcs:
@@ -376,10 +378,10 @@ async def mysingouins(ctx):
 async def mysingouin(ctx, pcid: int = None):
     member       = ctx.message.author
 
-    print('{} [{}][{}] !mysingouin <{}>'.format(mynow(),ctx.message.channel,member,pcid))
+    print(f'{mynow()} [{ctx.message.channel}][{member}] !mysingouin <{pcid}>')
 
     if pcid is None:
-        print('{} [{}][{}] └> Sent Helper'.format(mynow(),ctx.message.channel,member))
+        print(f'{mynow()} [{ctx.message.channel}][{member}] └> Sent Helper')
         await ctx.message.author.send(msg_mysingouin_helper)
         return
 
@@ -395,17 +397,19 @@ async def mysingouin(ctx, pcid: int = None):
         except:
             pass
         else:
-            print('{} [{}][{}] └> Message deleted'.format(mynow(),ctx.message.channel,member))
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └> Message deleted')
         return
 
     pc = query_pc_get(pcid,member)[3]
     if pc is None:
         await ctx.send(f'`Singouin not yours/not found in DB (pcid:{pcid})`')
+        print(f'{mynow()} [{ctx.message.channel}][{member}] └──> No Singouin found in DB')
         return
 
     stuff = query_mypc_items_get(pcid,member)[3]
     if stuff is None:
         await ctx.send(f'`Singouin Stuff not found in DB (pcid:{pcid})`')
+        print(f'{mynow()} [{ctx.message.channel}][{member}] └──> No Stuff found in DB')
         return
 
     embed = discord.Embed(
