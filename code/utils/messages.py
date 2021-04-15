@@ -2,9 +2,9 @@
 
 # Messages
 msg_welcome           = ':arrow_forward: Salutations !\n'
-msg_welcome          += 'Par la banane sacrée :banana:, bienvenue parmi nous\n'
-msg_welcome          += 'Afin de lier son compte Singouins, et ton Discord utilises la commande `!register ton_adresse@mail.com`\n'
-msg_welcome          += 'En remplaçant bien dans l\'exemple l\'adresse mail que tu as utilisé pour ton inscription au jeu\n'
+msg_welcome          += 'Par la banane sacrée :banana:, bienvenue parmi nous (:\n'
+msg_welcome          += 'Afin de lier ton compte Singouins et ton Discord, utilise la commande `!register ton_adresse@mail.com`\n'
+msg_welcome          += 'En remplaçant bien dans l\'exemple l\'adresse mail que tu as utilisé pour ton inscription au jeu !\n'
 msg_welcome          += 'Je m\'occupe du reste !'
 
 msg_register_ok       = ':ok: You\'re validated !\n'
