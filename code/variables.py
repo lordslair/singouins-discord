@@ -21,3 +21,9 @@ REDIS_DB_NAME = os.environ['SEP_REDIS_DB']
 
 # PCS variables for remote storage
 PCS_URL       = os.environ['SEP_PCS_URL']
+
+# External URL
+API_URL       = os.environ['SEP_API_URL']
+
+# Admin token used from Discord
+API_ADMIN_TOKEN = os.environ['SEP_ADMIN_TOKEN']

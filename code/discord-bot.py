@@ -24,6 +24,7 @@ from mysql.utils        import redis
 from variables          import *
 from utils.messages     import *
 from utils.histograms   import draw
+from utils.requests     import *
 
 from mysql.methods.fn_creature import fn_creature_get
 from mysql.methods.fn_user     import fn_user_get_from_member
@@ -95,6 +96,7 @@ async def register(ctx, usermail: str = None):
 @client.command(pass_context=True,name='grant', help='Grant a Discord user basic roles')
 async def register(ctx):
     member       = ctx.message.author
+    discordname  = member.name + '#' + member.discriminator
 
     print(f'{mynow()} [{ctx.message.channel}][{member}] !grant')
 
@@ -146,13 +148,16 @@ async def register(ctx):
                 await ctx.message.author.send(':ok: You have a new role:Singouins')
 
         # Apply Squad roles if needed
-        guild      = ctx.guild
-        squads = query_squads_get(member)[3]
-        if squads:
-            squadlist = squads['leader'] + squads['member']
-            squadset  = set(squadlist)
+        guild = ctx.guild
+        pcs   = api_admin_mypc_get_all(discordname)
+        if pcs:
+            for pc in pcs:
+                squadid = pc['squad']
+                
+                # We need to skip pc when he is not in a squad
+                if squadid is None:
+                    continue
 
-            for squadid in squadset:
                 print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Squad detected (squadid:{squadid})')
 
                 # Add the squad role to the user
@@ -321,6 +326,7 @@ async def admin(ctx,*args):
 @client.command(pass_context=True,name='mysingouins', help='Display your Singouins')
 async def mysingouins(ctx):
     member       = ctx.message.author
+    discordname  = member.name + '#' + member.discriminator
 
     print(f'{mynow()} [{ctx.message.channel}][{member}] !mysingouins')
 
@@ -355,7 +361,7 @@ async def mysingouins(ctx):
                  emojiRaceM,
                  emojiRaceO]
 
-    pcs = query_pcs_get(member)[3]
+    pcs = api_admin_mypc_get_all(discordname)
     if pcs is None:
         await ctx.send(f'`No Singouin found in DB`')
         print(f'{mynow()} [{ctx.message.channel}][{member}] └──> No Singouin found in DB')
@@ -363,8 +369,8 @@ async def mysingouins(ctx):
 
     mydesc = ''
     for pc in pcs:
-        emojiMyRace = emojiRace[pc.race - 1]
-        mydesc += f'{emojiMyRace} [{pc.id}] {pc.name}\n'
+        emojiMyRace = emojiRace[pc['race'] - 1]
+        mydesc += f"{emojiMyRace} [{pc['id']}] {pc['name']}\n"
 
     embed = discord.Embed(
         title = 'Mes Singouins:',
@@ -377,6 +383,7 @@ async def mysingouins(ctx):
 @client.command(pass_context=True,name='mysingouin', help='Display a Singouin profile')
 async def mysingouin(ctx, pcid: int = None):
     member       = ctx.message.author
+    discordname  = member.name + '#' + member.discriminator
 
     print(f'{mynow()} [{ctx.message.channel}][{member}] !mysingouin <{pcid}>')
 
@@ -400,7 +407,7 @@ async def mysingouin(ctx, pcid: int = None):
             print(f'{mynow()} [{ctx.message.channel}][{member}] └> Message deleted')
         return
 
-    pc = query_pc_get(pcid,member)[3]
+    pc = api_admin_mypc_get_one(discordname,pcid)
     if pc is None:
         await ctx.send(f'`Singouin not yours/not found in DB (pcid:{pcid})`')
         print(f'{mynow()} [{ctx.message.channel}][{member}] └──> No Singouin found in DB')
@@ -413,7 +420,7 @@ async def mysingouin(ctx, pcid: int = None):
         return
 
     embed = discord.Embed(
-        title = f'[{pc.id}] {pc.name}\n',
+        title = f"[{pc['id']}] {pc['name']}\n",
         #description = 'Profil:',
         colour = discord.Colour.blue()
     )
@@ -428,7 +435,7 @@ async def mysingouin(ctx, pcid: int = None):
     msg_stats = 'Stats:'
     msg_nbr   = 'Nbr:'
     embed.add_field(name=f'`{msg_stats: >9}`      {emojiM}      {emojiR}      {emojiV}      {emojiG}      {emojiP}      {emojiB}',
-                    value=f'`{msg_nbr: >9}` `{pc.m: >4}` `{pc.r: >4}` `{pc.v: >4}` `{pc.g: >4}` `{pc.p: >4}` `{pc.b: >4}`',
+                    value=f"`{msg_nbr: >9}` `{pc['m']: >4}` `{pc['r']: >4}` `{pc['v']: >4}` `{pc['g']: >4}` `{pc['p']: >4}` `{pc['b']: >4}`",
                     inline = False)
 
     emojiShardL = discord.utils.get(client.emojis, name='shardL')
@@ -533,7 +540,7 @@ async def squad_channel_cleanup(timer):
                 m = re.search(r"^squad-(?P<squadid>\d+)", channel.name)
                 if m is not None:
                     squadid = m.group('squadid')
-                    if query_squad_get(squadid)[3]:
+                    if api_admin_squad_get_one(squadid):
                         # The squad does exist in DB
                         pass
                     else:
@@ -549,7 +556,8 @@ async def squad_channel_cleanup(timer):
                         # We try to delete the unused role
                         try:
                             role = discord.utils.get(guild.roles, name=f'Squad-{squadid}')
-                            await role.delete()
+                            if role:
+                                await role.delete()
                         except Exception as e:
                             print(f'{mynow()} [{channel.name}] [BOT]    └──> Squad role deletion failed')
                         else:
@@ -561,8 +569,8 @@ async def squad_channel_create(timer):
         for guild in client.guilds:
             admin_role = discord.utils.get(guild.roles, name='Team')
             category   = discord.utils.get(guild.categories, name='Squads')
-            for squad in query_squads_get_all()[3]:
-                channel_name = f'Squad-{squad.id}'.lower()
+            for squad in api_admin_squad_get_all():
+                channel_name = f"Squad-{squad['id']}".lower()
                 channel      = discord.utils.get(client.get_all_channels(), name=channel_name)
                 if channel:
                     # Squad channel already exists
@@ -572,37 +580,37 @@ async def squad_channel_create(timer):
                     print(f'{mynow()} [{channel_name}] [BOT] ───> Squad channel to add')
 
                     # Check role existence
-                    if discord.utils.get(guild.roles, name=f'Squad-{squad.id}'):
+                    if discord.utils.get(guild.roles, name=f"Squad-{squad['id']}"):
                         # Role already exists, do nothing
-                        print(f'{mynow()} [{channel_name}] [BOT]    └──> Squad role already exists (squadid:{squad.id})')
+                        print(f"{mynow()} [{channel_name}] [BOT]    └──> Squad role already exists (squadid:{squad['id']})")
                     else:
                         # Role do not exist, create it
                         try:
-                            squad_role = await guild.create_role(name=f'Squad-{squad.id}',
+                            squad_role = await guild.create_role(name=f"Squad-{squad['id']}",
                                                                  mentionable=True,
                                                                  permissions=discord.Permissions.none())
                         except:
-                            print(f'{mynow()} [{channel_name}] [BOT]    └──> Squad role creation failed (squadid:{squad.id})')
+                            print(f"{mynow()} [{channel_name}] [BOT]    └──> Squad role creation failed (squadid:{squad['id']})")
                         else:
-                            print(f'{mynow()} [{channel_name}] [BOT]    └──> Squad role creation successed (squadid:{squad.id})')
+                            print(f"{mynow()} [{channel_name}] [BOT]    └──> Squad role creation successed (squadid:{squad['id']})")
 
                     # Create channel
                     try:
-                        squad_role = discord.utils.get(guild.roles, name=f'Squad-{squad.id}')
+                        squad_role = discord.utils.get(guild.roles, name=f"Squad-{squad['id']}")
                         overwrites    = {
                             guild.default_role: discord.PermissionOverwrite(read_messages=False),
                             guild.me: discord.PermissionOverwrite(read_messages=True),
                             admin_role: discord.PermissionOverwrite(read_messages=True),
                             squad_role: discord.PermissionOverwrite(read_messages=True)
                         }
-                        mysquadchannel = await guild.create_text_channel(f'Squad-{squad.id}',
+                        mysquadchannel = await guild.create_text_channel(f"Squad-{squad['id']}",
                                                                          category=category,
-                                                                         topic=f'Squad-{squad.id} private channel',
+                                                                         topic=f"Squad-{squad['id']} private channel",
                                                                          overwrites=overwrites)
                     except:
-                        print(f'{mynow()} [{channel_name}] [BOT]    └──> Squad channel creation failed (Squads/squadid:{squad.id})')
+                        print(f"{mynow()} [{channel_name}] [BOT]    └──> Squad channel creation failed (Squads/squadid:{squad['id']})")
                     else:
-                        print(f'{mynow()} [{channel_name}] [BOT]    └──> Squad channel creation successed (Squads/Squad-{squad.id})')
+                        print(f"{mynow()} [{channel_name}] [BOT]    └──> Squad channel creation successed (Squads/Squad-{squad['id']})")
         await asyncio.sleep(timer)
 
 # 3600s Tasks (@Hourly)
