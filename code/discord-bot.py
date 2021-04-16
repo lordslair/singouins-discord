@@ -153,7 +153,7 @@ async def register(ctx):
         if pcs:
             for pc in pcs:
                 squadid = pc['squad']
-                
+
                 # We need to skip pc when he is not in a squad
                 if squadid is None:
                     continue
@@ -569,7 +569,13 @@ async def squad_channel_create(timer):
         for guild in client.guilds:
             admin_role = discord.utils.get(guild.roles, name='Team')
             category   = discord.utils.get(guild.categories, name='Squads')
-            for squad in api_admin_squad_get_all():
+            squads     = api_admin_squad_get_all()
+
+            # We skip the loop if no squads are returned
+            if squads is None:
+                continue
+
+            for squad in squads:
                 channel_name = f"Squad-{squad['id']}".lower()
                 channel      = discord.utils.get(client.get_all_channels(), name=channel_name)
                 if channel:
