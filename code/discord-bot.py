@@ -23,7 +23,6 @@ from mysql.methods      import *
 from mysql.utils        import redis
 from variables          import *
 from utils.messages     import *
-from utils.histograms   import draw
 from utils.requests     import *
 
 from mysql.methods.fn_creature import fn_creature_get
@@ -263,30 +262,6 @@ async def admin(ctx,*args):
         elif action == 'help':
             print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Sent Helper')
             await ctx.send('`!admin <wallet> {get} {all} {pcid}`')
-    # Histogram commands
-    elif args[0] == 'histogram':
-        # We need exactly 2 args : !admin {histogram} {CL|CR}
-        if len(args) < 2:
-            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Args failure')
-            await ctx.send('`!admin <histogram> needs more arguments`')
-            return
-
-        htype  = args[1]
-
-        if htype == 'help':
-            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Sent Helper')
-            await ctx.send('`!admin histogram {CL|CR}`')
-
-        try:
-            array  = query_histo(htype)
-            answer = draw(array)
-        except:
-            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Histogram creation failed')
-        else:
-            print(f'{mynow()} [{ctx.message.channel}][{member}] ├──> Histogram creation Successful')
-            if answer:
-                await ctx.send(answer)
-                print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Histogram sent')
     # Discord Commands
     elif args[0] == 'discord':
         # We need exactly 4 args : !admin {wallet} {get} {all} {pcid}
