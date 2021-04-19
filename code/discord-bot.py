@@ -35,10 +35,10 @@ client = commands.Bot(command_prefix = '!')
 
 # Welcome message in the logs on daemon start
 print(f'{mynow()} [BOT] Daemon started   [✓]')
-# Pre-flight check for SQL connection
-if query_up(): tick = '✓'
-else         : tick = '✗'
-print(f'{mynow()} [BOT] SQL connection   [{tick}] ({MYSQL_USER}@{MYSQL_HOST}/{MYSQL_DB})')
+# Pre-flight check for API connection
+if api_admin_up(): tick = '✓'
+else             : tick = '✗'
+print(f'{mynow()} [BOT] API connection   [{tick}] ({API_URL})')
 
 @client.event
 async def on_ready():
