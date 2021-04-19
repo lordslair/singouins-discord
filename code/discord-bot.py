@@ -149,7 +149,7 @@ async def register(ctx):
 
         # Apply Squad roles if needed
         guild = ctx.guild
-        pcs   = api_admin_mypc_get_all(discordname)
+        pcs   = api_admin_mypc(discordname,None)
         if pcs:
             for pc in pcs:
                 squadid = pc['squad']
@@ -361,7 +361,7 @@ async def mysingouins(ctx):
                  emojiRaceM,
                  emojiRaceO]
 
-    pcs = api_admin_mypc_get_all(discordname)
+    pcs = api_admin_mypc(discordname,None)
     if pcs is None:
         await ctx.send(f'`No Singouin found in DB`')
         print(f'{mynow()} [{ctx.message.channel}][{member}] └──> No Singouin found in DB')
@@ -407,7 +407,7 @@ async def mysingouin(ctx, pcid: int = None):
             print(f'{mynow()} [{ctx.message.channel}][{member}] └> Message deleted')
         return
 
-    pc = api_admin_mypc_get_one(discordname,pcid)
+    pc = api_admin_mypc(discordname,pcid)
     if pc is None:
         await ctx.send(f'`Singouin not yours/not found in DB (pcid:{pcid})`')
         print(f'{mynow()} [{ctx.message.channel}][{member}] └──> No Singouin found in DB')
@@ -539,8 +539,8 @@ async def squad_channel_cleanup(timer):
             for channel in guild.text_channels:
                 m = re.search(r"^squad-(?P<squadid>\d+)", channel.name)
                 if m is not None:
-                    squadid = m.group('squadid')
-                    if api_admin_squad_get_one(squadid):
+                    squadid = int(m.group('squadid'))
+                    if api_admin_squad(squadid):
                         # The squad does exist in DB
                         pass
                     else:
@@ -569,7 +569,7 @@ async def squad_channel_create(timer):
         for guild in client.guilds:
             admin_role = discord.utils.get(guild.roles, name='Team')
             category   = discord.utils.get(guild.categories, name='Squads')
-            squads     = api_admin_squad_get_all()
+            squads     = api_admin_squad(None)
 
             # We skip the loop if no squads are returned
             if squads is None:
