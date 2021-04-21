@@ -24,6 +24,7 @@ from mysql.utils        import redis
 from variables          import *
 from utils.messages     import *
 from utils.requests     import *
+from utils.pretty       import *
 
 from mysql.methods.fn_creature import fn_creature_get
 from mysql.methods.fn_user     import fn_user_get_from_member
@@ -231,8 +232,8 @@ async def admin(ctx,*args):
                 await ctx.send(f'`Reset PA {select} done for pcid:{pc.id}`')
         elif action == 'get':
             if select == 'all':
-                pa = redis.get_pa(pc)
-                await ctx.send(pa)
+                payload = api_admin_mypc_pa(discordname,pcid)
+                await ctx.send(pretty_pa(payload))
         elif action == 'help':
             print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Sent Helper')
             await ctx.send('`!admin pa {reset|get} {all|blue|red} {pcid}`')
@@ -355,16 +356,16 @@ async def mysingouins(ctx):
 
     await ctx.send(embed=embed)
 
-@client.command(pass_context=True,name='mysingouin', help='Display a Singouin profile')
-async def mysingouin(ctx, pcid: int = None):
+@client.command(pass_context=True,name='mysingouin', help='Display a Singouin infos')
+async def mysingouin(ctx, action: str = None, pcid: int = None):
     member       = ctx.message.author
     discordname  = member.name + '#' + member.discriminator
 
-    print(f'{mynow()} [{ctx.message.channel}][{member}] !mysingouin <{pcid}>')
+    print(f'{mynow()} [{ctx.message.channel}][{member}] !mysingouin <{action}> <{pcid}>')
 
-    if pcid is None:
-        print(f'{mynow()} [{ctx.message.channel}][{member}] └> Sent Helper')
-        await ctx.message.author.send(msg_mysingouin_helper)
+    if pcid is None or action is None:
+        print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Sent Helper')
+        await member.send(msg_mysingouin_helper)
         return
 
     # Check if the command is used in a channel or a DM
@@ -379,87 +380,189 @@ async def mysingouin(ctx, pcid: int = None):
         except:
             pass
         else:
-            print(f'{mynow()} [{ctx.message.channel}][{member}] └> Message deleted')
-        return
+            print(f'{mynow()} [{ctx.message.channel}][{member}] ├──> Message deleted')
 
-    pc = api_admin_mypc(discordname,pcid)
-    if pc is None:
-        await ctx.send(f'`Singouin not yours/not found in DB (pcid:{pcid})`')
-        print(f'{mynow()} [{ctx.message.channel}][{member}] └──> No Singouin found in DB')
-        return
+    if action == 'pa':
+        pc = api_admin_mypc(discordname,pcid)
+        if pc is None:
+            await ctx.send(f'`Singouin not yours/not found in DB (pcid:{pcid})`')
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Singouin profile query failed')
+            return
+        else:
+            print(f'{mynow()} [{ctx.message.channel}][{member}] ├──> Singouin profile query successed')
 
-    stuff = query_mypc_items_get(pcid,member)[3]
-    if stuff is None:
-        await ctx.send(f'`Singouin Stuff not found in DB (pcid:{pcid})`')
-        print(f'{mynow()} [{ctx.message.channel}][{member}] └──> No Stuff found in DB')
-        return
+        payload = api_admin_mypc_pa(discordname,pcid)
+        if payload is None:
+            await ctx.send(f'`Singouin PA not found in DB (pcid:{pcid})`')
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Singouin PA query failed')
+            return
+        else:
+            print(f'{mynow()} [{ctx.message.channel}][{member}] ├──> Singouin PA query successed')
+            if isinstance(ctx.message.channel, discord.DMChannel):
+                # If the member is in DM -> we send
+                await member.send(pretty_pa(payload))
+                print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Singouin PA sent')
+            elif ctx.message.channel.name == f"Squad-{pc['squad']}".lower():
+                # If the member is in his squad channel -> we send
+                await ctx.send(pretty_pa(payload))
+                print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Singouin PA sent')
+            else:
+                # We do nothing
+                pass
+    elif action == 'profile':
+        pc = api_admin_mypc(discordname,pcid)
+        if pc is None:
+            await ctx.send(f'`Singouin not yours/not found in DB (pcid:{pcid})`')
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Singouin profile query failed')
+            return
+        else:
+            print(f'{mynow()} [{ctx.message.channel}][{member}] ├──> Singouin profile query successed')
 
-    embed = discord.Embed(
-        title = f"[{pc['id']}] {pc['name']}\n",
-        #description = 'Profil:',
-        colour = discord.Colour.blue()
-    )
+        embed = discord.Embed(
+            title = f"[{pc['id']}] {pc['name']}\n",
+            #description = 'Profil:',
+            colour = discord.Colour.blue()
+        )
 
-    emojiM = discord.utils.get(client.emojis, name='statM')
-    emojiR = discord.utils.get(client.emojis, name='statR')
-    emojiV = discord.utils.get(client.emojis, name='statV')
-    emojiG = discord.utils.get(client.emojis, name='statG')
-    emojiP = discord.utils.get(client.emojis, name='statP')
-    emojiB = discord.utils.get(client.emojis, name='statB')
+        emojiM = discord.utils.get(client.emojis, name='statM')
+        emojiR = discord.utils.get(client.emojis, name='statR')
+        emojiV = discord.utils.get(client.emojis, name='statV')
+        emojiG = discord.utils.get(client.emojis, name='statG')
+        emojiP = discord.utils.get(client.emojis, name='statP')
+        emojiB = discord.utils.get(client.emojis, name='statB')
 
-    msg_stats = 'Stats:'
-    msg_nbr   = 'Nbr:'
-    embed.add_field(name=f'`{msg_stats: >9}`      {emojiM}      {emojiR}      {emojiV}      {emojiG}      {emojiP}      {emojiB}',
-                    value=f"`{msg_nbr: >9}` `{pc['m']: >4}` `{pc['r']: >4}` `{pc['v']: >4}` `{pc['g']: >4}` `{pc['p']: >4}` `{pc['b']: >4}`",
-                    inline = False)
+        msg_stats = 'Stats:'
+        msg_nbr   = 'Nbr:'
+        embed.add_field(name=f'`{msg_stats: >9}`      {emojiM}      {emojiR}      {emojiV}      {emojiG}      {emojiP}      {emojiB}',
+                        value=f"`{msg_nbr: >9}` `{pc['m']: >4}` `{pc['r']: >4}` `{pc['v']: >4}` `{pc['g']: >4}` `{pc['p']: >4}` `{pc['b']: >4}`",
+                        inline = False)
 
-    emojiShardL = discord.utils.get(client.emojis, name='shardL')
-    emojiShardE = discord.utils.get(client.emojis, name='shardE')
-    emojiShardR = discord.utils.get(client.emojis, name='shardR')
-    emojiShardU = discord.utils.get(client.emojis, name='shardU')
-    emojiShardC = discord.utils.get(client.emojis, name='shardC')
-    emojiShardB = discord.utils.get(client.emojis, name='shardB')
+        if isinstance(ctx.message.channel, discord.DMChannel):
+            # If the member is in DM -> we send
+            await member.send(embed=embed)
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Singouin ammo sent')
+        elif ctx.message.channel.name == f"Squad-{pc['squad']}".lower():
+            # If the member is in his squad channel -> we send
+            await ctx.send(embed=embed)
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Singouin ammo sent')
+        else:
+            # We do nothing
+            pass
+    elif action == 'wallet':
+        pc = api_admin_mypc(discordname,pcid)
+        if pc is None:
+            await ctx.send(f'`Singouin not yours/not found in DB (pcid:{pcid})`')
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Singouin profile query failed')
+            return
+        else:
+            print(f'{mynow()} [{ctx.message.channel}][{member}] ├──> Singouin profile query successed')
 
-    wallet     = stuff['wallet'][0]
-    msg_shards = 'Shards:'
-    msg_nbr    = 'Nbr:'
-    embed.add_field(name=f'`{msg_shards: >9}`      {emojiShardL}      {emojiShardE}      {emojiShardR}      {emojiShardU}      {emojiShardC}      {emojiShardB}',
-                    value=f'`{msg_nbr: >9}` `{wallet.legendary: >4}` `{wallet.epic: >4}` `{wallet.rare: >4}` `{wallet.uncommon: >4}` `{wallet.common: >4}` `{wallet.broken: >4}`',
-                    inline = False)
+        stuff = query_mypc_items_get(pcid,member)[3]
+        if stuff is None:
+            await ctx.send(f'`Singouin wallet not found in DB (pcid:{pcid})`')
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Singouin wallet query failed')
+            return
+        else:
+            print(f'{mynow()} [{ctx.message.channel}][{member}] ├──> Singouin wallet query successed')
 
-    emojiAmmo22  = discord.utils.get(client.emojis, name='ammo22')
-    emojiAmmo223 = discord.utils.get(client.emojis, name='ammo223')
-    emojiAmmo311 = discord.utils.get(client.emojis, name='ammo311')
-    emojiAmmo50  = discord.utils.get(client.emojis, name='ammo50')
-    emojiAmmo55  = discord.utils.get(client.emojis, name='ammo55')
-    emojiAmmoS   = discord.utils.get(client.emojis, name='ammoShell')
+        embed = discord.Embed(
+            title = f"[{pc['id']}] {pc['name']}\n",
+            #description = 'Profil:',
+            colour = discord.Colour.blue()
+        )
 
-    msg_shards = 'Ammo:'
-    msg_nbr    = 'Nbr:'
-    embed.add_field(name=f'`{msg_shards: >9}`      {emojiAmmo22}      {emojiAmmo223}      {emojiAmmo311}      {emojiAmmo50}      {emojiAmmo55}      {emojiAmmoS}',
-                    value=f'`{msg_nbr: >9}` `{wallet.cal22: >4}` `{wallet.cal223: >4}` `{wallet.cal311: >4}` `{wallet.cal50: >4}` `{wallet.cal55: >4}` `{wallet.shell: >4}`',
-                    inline = False)
+        emojiShardL = discord.utils.get(client.emojis, name='shardL')
+        emojiShardE = discord.utils.get(client.emojis, name='shardE')
+        emojiShardR = discord.utils.get(client.emojis, name='shardR')
+        emojiShardU = discord.utils.get(client.emojis, name='shardU')
+        emojiShardC = discord.utils.get(client.emojis, name='shardC')
+        emojiShardB = discord.utils.get(client.emojis, name='shardB')
 
-    emojiAmmoA   = discord.utils.get(client.emojis, name='ammoArrow')
-    emojiAmmoB   = discord.utils.get(client.emojis, name='ammoBolt')
-    emojiAmmoF   = discord.utils.get(client.emojis, name='ammoFuel')
-    emojiAmmoG   = discord.utils.get(client.emojis, name='ammoGrenade')
-    emojiAmmoR   = discord.utils.get(client.emojis, name='ammoRocket')
+        wallet     = stuff['wallet'][0]
+        msg_shards = 'Shards:'
+        msg_nbr    = 'Nbr:'
+        embed.add_field(name=f'`{msg_shards: >9}`      {emojiShardL}      {emojiShardE}      {emojiShardR}      {emojiShardU}      {emojiShardC}      {emojiShardB}',
+                        value=f'`{msg_nbr: >9}` `{wallet.legendary: >4}` `{wallet.epic: >4}` `{wallet.rare: >4}` `{wallet.uncommon: >4}` `{wallet.common: >4}` `{wallet.broken: >4}`',
+                        inline = False)
 
-    emojiMoneyB  = discord.utils.get(client.emojis, name='moneyB')
+        if isinstance(ctx.message.channel, discord.DMChannel):
+            # If the member is in DM -> we send
+            await member.send(embed=embed)
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Singouin ammo sent')
+        elif ctx.message.channel.name == f"Squad-{pc['squad']}".lower():
+            # If the member is in his squad channel -> we send
+            await ctx.send(embed=embed)
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Singouin ammo sent')
+        else:
+            # We do nothing
+            pass
+    elif action == 'ammo':
+        pc = api_admin_mypc(discordname,pcid)
+        if pc is None:
+            await ctx.send(f'`Singouin not yours/not found in DB (pcid:{pcid})`')
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Singouin profile query failed')
+            return
+        else:
+            print(f'{mynow()} [{ctx.message.channel}][{member}] ├──> Singouin profile query successed')
 
-    # Temporary
-    wallet.fuel     = 0
-    wallet.grenade  = 0
-    wallet.rocket   = 0
+        stuff = query_mypc_items_get(pcid,member)[3]
+        if stuff is None:
+            await ctx.send(f'`Singouin ammo not found in DB (pcid:{pcid})`')
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Singouin ammo query failed')
+            return
+        else:
+            print(f'{mynow()} [{ctx.message.channel}][{member}] ├──> Singouin ammo query successed')
 
-    msg_shards = 'Specials:'
-    msg_nbr    = 'Nbr:'
-    embed.add_field(name=f'`{msg_shards: >9}`      {emojiAmmoA}      {emojiAmmoB}      {emojiAmmoF}      {emojiAmmoG}      {emojiAmmoR}      {emojiMoneyB}',
-                    value=f'`{msg_nbr: >9}` `{wallet.arrow: >4}` `{wallet.bolt: >4}` `{wallet.fuel: >4}` `{wallet.grenade: >4}` `{wallet.rocket: >4}` `{wallet.currency: >4}`',
-                    inline = False)
+        embed = discord.Embed(
+            title = f"[{pc['id']}] {pc['name']}\n",
+            #description = 'Profil:',
+            colour = discord.Colour.blue()
+        )
 
-    await ctx.send(embed=embed)
+        emojiAmmo22  = discord.utils.get(client.emojis, name='ammo22')
+        emojiAmmo223 = discord.utils.get(client.emojis, name='ammo223')
+        emojiAmmo311 = discord.utils.get(client.emojis, name='ammo311')
+        emojiAmmo50  = discord.utils.get(client.emojis, name='ammo50')
+        emojiAmmo55  = discord.utils.get(client.emojis, name='ammo55')
+        emojiAmmoS   = discord.utils.get(client.emojis, name='ammoShell')
+
+        wallet     = stuff['wallet'][0]
+        msg_shards = 'Ammo:'
+        msg_nbr    = 'Nbr:'
+        embed.add_field(name=f'`{msg_shards: >9}`      {emojiAmmo22}      {emojiAmmo223}      {emojiAmmo311}      {emojiAmmo50}      {emojiAmmo55}      {emojiAmmoS}',
+                        value=f'`{msg_nbr: >9}` `{wallet.cal22: >4}` `{wallet.cal223: >4}` `{wallet.cal311: >4}` `{wallet.cal50: >4}` `{wallet.cal55: >4}` `{wallet.shell: >4}`',
+                        inline = False)
+
+        emojiAmmoA   = discord.utils.get(client.emojis, name='ammoArrow')
+        emojiAmmoB   = discord.utils.get(client.emojis, name='ammoBolt')
+        emojiAmmoF   = discord.utils.get(client.emojis, name='ammoFuel')
+        emojiAmmoG   = discord.utils.get(client.emojis, name='ammoGrenade')
+        emojiAmmoR   = discord.utils.get(client.emojis, name='ammoRocket')
+
+        emojiMoneyB  = discord.utils.get(client.emojis, name='moneyB')
+
+        # Temporary
+        wallet.fuel     = 0
+        wallet.grenade  = 0
+        wallet.rocket   = 0
+
+        msg_shards = 'Specials:'
+        msg_nbr    = 'Nbr:'
+        embed.add_field(name=f'`{msg_shards: >9}`      {emojiAmmoA}      {emojiAmmoB}      {emojiAmmoF}      {emojiAmmoG}      {emojiAmmoR}      {emojiMoneyB}',
+                        value=f'`{msg_nbr: >9}` `{wallet.arrow: >4}` `{wallet.bolt: >4}` `{wallet.fuel: >4}` `{wallet.grenade: >4}` `{wallet.rocket: >4}` `{wallet.currency: >4}`',
+                        inline = False)
+
+        if isinstance(ctx.message.channel, discord.DMChannel):
+            # If the member is in DM -> we send
+            await member.send(embed=embed)
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Singouin ammo sent')
+        elif ctx.message.channel.name == f"Squad-{pc['squad']}".lower():
+            # If the member is in his squad channel -> we send
+            await ctx.send(embed=embed)
+            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Singouin ammo sent')
+        else:
+            # We do nothing
+            pass
 
 @client.event
 async def on_member_join(member):
