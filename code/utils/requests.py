@@ -42,9 +42,9 @@ def api_admin_squad(squadid):
     else:
         return None
 
-def api_admin_mypc_pa(discordname,pcid):
+def api_admin_mypc_pa(discordname,pcid,redpa,bluepa):
     url      = f'{API_URL}/admin/mypc/pa'
-    payload  = {'discordname': discordname, 'pcid': pcid}
+    payload  = {'discordname': discordname, 'pcid': pcid, 'redpa': redpa, 'bluepa': bluepa}
     headers  = json.loads('{"Authorization": "Bearer '+ API_ADMIN_TOKEN + '"}')
     response = requests.post(url, json = payload, headers=headers)
 

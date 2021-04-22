@@ -20,11 +20,11 @@ from discord.ext        import commands
 print(f'{mynow()} [BOT] Discord  imports [✓]')
 
 from mysql.methods      import *
-from mysql.utils        import redis
 from variables          import *
 from utils.messages     import *
 from utils.requests     import *
 from utils.pretty       import *
+from utils.redis        import *
 
 from mysql.methods.fn_creature import fn_creature_get
 from mysql.methods.fn_user     import fn_user_get_from_member
@@ -222,17 +222,17 @@ async def admin(ctx,*args):
 
         if action == 'reset':
             if select == 'all':
-                redis.reset_pa(pc,True,True)
+                api_admin_mypc_pa(discordname,pcid,16,8)
                 await ctx.send(f'`Reset PA {select} done for pcid:{pc.id}`')
             elif select == 'red':
-                redis.reset_pa(pc,False,True)
+                api_admin_mypc_pa(discordname,pcid,16,None)
                 await ctx.send(f'`Reset PA {select} done for pcid:{pc.id}`')
             elif select == 'blue':
-                redis.reset_pa(pc,True,False)
+                api_admin_mypc_pa(discordname,pcid,None,8)
                 await ctx.send(f'`Reset PA {select} done for pcid:{pc.id}`')
         elif action == 'get':
             if select == 'all':
-                payload = api_admin_mypc_pa(discordname,pcid)
+                payload = api_admin_mypc_pa(discordname,pcid,None,None)
                 await ctx.send(pretty_pa(payload))
         elif action == 'help':
             print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Sent Helper')
@@ -391,7 +391,7 @@ async def mysingouin(ctx, action: str = None, pcid: int = None):
         else:
             print(f'{mynow()} [{ctx.message.channel}][{member}] ├──> Singouin profile query successed')
 
-        payload = api_admin_mypc_pa(discordname,pcid)
+        payload = api_admin_mypc_pa(discordname,pcid,None,None)
         if payload is None:
             await ctx.send(f'`Singouin PA not found in DB (pcid:{pcid})`')
             print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Singouin PA query failed')
@@ -577,7 +577,7 @@ async def yqueue_check(timer):
         # Opening Queue
         try:
             yqueue_name = 'discord'
-            msgs        = redis.yqueue_get(yqueue_name)
+            msgs        = yqueue_get(yqueue_name)
         except Exception as e:
             print(f'{mynow()} [BOT] Unable to retrieve data from yarqueue:{yqueue_name}')
         else:

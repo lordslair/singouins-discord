@@ -16,17 +16,6 @@ r = redis.StrictRedis(host     = REDIS_HOST,
                       encoding = 'utf-8')
 
 #
-# Queries: PA
-#
-
-def reset_pa(pc,blue,red):
-
-    if red:
-        r.set(f'red:{pc.id}','red',ex=1)
-    if blue:
-        r.set(f'blue:{pc.id}','blue',ex=1)
-
-#
 # Queries: Queues
 #
 
