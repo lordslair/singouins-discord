@@ -19,7 +19,6 @@ from discord.ext        import commands
 # Log Discord imports
 print(f'{mynow()} [BOT] Discord  imports [✓]')
 
-from mysql.methods      import *
 from variables          import *
 from utils.messages     import *
 from utils.requests     import *
