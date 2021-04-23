@@ -25,3 +25,27 @@ def pretty_pa(payload):
     rettext  += f"PA red   : {redbar}\n"
 
     return (f'```{rettext}```')
+
+
+def pretty_wallet(payload):
+
+    rettext   = f"Creature : [{payload['pc']['id']}] {payload['pc']['name']}\n"
+    rettext  += f"Currency : {payload['wallet']['currency']}\n"
+    rettext  += f'Shards\n'
+    rettext  += f"    🟠 Legendary : {payload['wallet']['legendary']}\n"
+    rettext  += f"    🟣 Epic      : {payload['wallet']['epic']}\n"
+    rettext  += f"    🔵 Rare      : {payload['wallet']['rare']}\n"
+    rettext  += f"    🟢 Uncommon  : {payload['wallet']['uncommon']}\n"
+    rettext  += f"    ⚪ Common    : {payload['wallet']['common']}\n"
+    rettext  += f"    🟤 Broken    : {payload['wallet']['broken']}\n"
+    rettext  += f'Ammos\n'
+    rettext  += f"    Arrows       : {payload['wallet']['arrow']}\n"
+    rettext  += f"    Bolts        : {payload['wallet']['bolt']}\n"
+    rettext  += f"    Shells       : {payload['wallet']['shell']}\n"
+    rettext  += f"    Cal .22      : {payload['wallet']['cal22']}\n"
+    rettext  += f"    Cal .223     : {payload['wallet']['cal223']}\n"
+    rettext  += f"    Cal .311     : {payload['wallet']['cal311']}\n"
+    rettext  += f"    Cal .50      : {payload['wallet']['cal50']}\n"
+    rettext  += f"    Cal .55      : {payload['wallet']['cal55']}\n"
+
+    return (f'```{rettext}```')

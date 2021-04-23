@@ -249,17 +249,11 @@ async def admin(ctx,*args):
         select = args[2]
         pcid   = int(args[3])
 
-        pc = fn_creature_get(None,pcid)[3]
-        if pc is None:
-            print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Unknown creature')
-            await ctx.send(f'`Unknown creature pcid:{pcid}`')
-            return
-
         if action == 'get':
             if select == 'all':
-                wallet = query_wallet_get(pc)
+                wallet = api_admin_mypc_wallet('Wukong',pcid)
                 if wallet:
-                    await ctx.send(wallet)
+                    await ctx.send(pretty_wallet(payload))
         elif action == 'help':
             print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Sent Helper')
             await ctx.send('`!admin <wallet> {get} {all} {pcid}`')
@@ -457,7 +451,7 @@ async def mysingouin(ctx, action: str = None, pcid: int = None):
         else:
             print(f'{mynow()} [{ctx.message.channel}][{member}] ├──> Singouin profile query successed')
 
-        stuff = query_mypc_items_get(pcid,member)[3]
+        stuff = api_admin_mypc_wallet(discordname,pcid)
         if stuff is None:
             await ctx.send(f'`Singouin wallet not found in DB (pcid:{pcid})`')
             print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Singouin wallet query failed')
@@ -478,11 +472,24 @@ async def mysingouin(ctx, action: str = None, pcid: int = None):
         emojiShardC = discord.utils.get(client.emojis, name='shardC')
         emojiShardB = discord.utils.get(client.emojis, name='shardB')
 
-        wallet     = stuff['wallet'][0]
         msg_shards = 'Shards:'
         msg_nbr    = 'Nbr:'
-        embed.add_field(name=f'`{msg_shards: >9}`      {emojiShardL}      {emojiShardE}      {emojiShardR}      {emojiShardU}      {emojiShardC}      {emojiShardB}',
-                        value=f'`{msg_nbr: >9}` `{wallet.legendary: >4}` `{wallet.epic: >4}` `{wallet.rare: >4}` `{wallet.uncommon: >4}` `{wallet.common: >4}` `{wallet.broken: >4}`',
+        name       = f'`{msg_shards: >9}`      '
+        name      += f'{emojiShardL}      '
+        name      += f'{emojiShardE}      '
+        name      += f'{emojiShardR}      '
+        name      += f'{emojiShardU}      '
+        name      += f'{emojiShardC}      '
+        name      += f'{emojiShardB}'
+        value      = f'`{msg_nbr: >9}` '
+        value     += f"`{stuff['wallet']['legendary']: >4}` "
+        value     += f"`{stuff['wallet']['epic']: >4}` "
+        value     += f"`{stuff['wallet']['rare']: >4}` "
+        value     += f"`{stuff['wallet']['uncommon']: >4}` "
+        value     += f"`{stuff['wallet']['common']: >4}` "
+        value     += f"`{stuff['wallet']['broken']: >4}`"
+        embed.add_field(name   = name,
+                        value  = value,
                         inline = False)
 
         if isinstance(ctx.message.channel, discord.DMChannel):
@@ -505,7 +512,7 @@ async def mysingouin(ctx, action: str = None, pcid: int = None):
         else:
             print(f'{mynow()} [{ctx.message.channel}][{member}] ├──> Singouin profile query successed')
 
-        stuff = query_mypc_items_get(pcid,member)[3]
+        stuff = api_admin_mypc_wallet(discordname,pcid)
         if stuff is None:
             await ctx.send(f'`Singouin ammo not found in DB (pcid:{pcid})`')
             print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Singouin ammo query failed')
@@ -526,11 +533,24 @@ async def mysingouin(ctx, action: str = None, pcid: int = None):
         emojiAmmo55  = discord.utils.get(client.emojis, name='ammo55')
         emojiAmmoS   = discord.utils.get(client.emojis, name='ammoShell')
 
-        wallet     = stuff['wallet'][0]
         msg_shards = 'Ammo:'
         msg_nbr    = 'Nbr:'
-        embed.add_field(name=f'`{msg_shards: >9}`      {emojiAmmo22}      {emojiAmmo223}      {emojiAmmo311}      {emojiAmmo50}      {emojiAmmo55}      {emojiAmmoS}',
-                        value=f'`{msg_nbr: >9}` `{wallet.cal22: >4}` `{wallet.cal223: >4}` `{wallet.cal311: >4}` `{wallet.cal50: >4}` `{wallet.cal55: >4}` `{wallet.shell: >4}`',
+        name       = f'`{msg_shards: >9}`      '
+        name      += f'{emojiAmmo22}      '
+        name      += f'{emojiAmmo223}      '
+        name      += f'{emojiAmmo311}      '
+        name      += f'{emojiAmmo50}      '
+        name      += f'{emojiAmmo55}      '
+        name      += f'{emojiAmmoS}'
+        value      = f'`{msg_nbr: >9}` '
+        value     += f"`{stuff['wallet']['cal22']: >4}` "
+        value     += f"`{stuff['wallet']['cal223']: >4}` "
+        value     += f"`{stuff['wallet']['cal311']: >4}` "
+        value     += f"`{stuff['wallet']['cal50']: >4}` "
+        value     += f"`{stuff['wallet']['cal55']: >4}` "
+        value     += f"`{stuff['wallet']['shell']: >4}`"
+        embed.add_field(name   = name,
+                        value  = value,
                         inline = False)
 
         emojiAmmoA   = discord.utils.get(client.emojis, name='ammoArrow')
@@ -542,14 +562,28 @@ async def mysingouin(ctx, action: str = None, pcid: int = None):
         emojiMoneyB  = discord.utils.get(client.emojis, name='moneyB')
 
         # Temporary
-        wallet.fuel     = 0
-        wallet.grenade  = 0
-        wallet.rocket   = 0
+        stuff['wallet']['fuel']    = 0
+        stuff['wallet']['grenade'] = 0
+        stuff['wallet']['rocket']  = 0
 
         msg_shards = 'Specials:'
         msg_nbr    = 'Nbr:'
-        embed.add_field(name=f'`{msg_shards: >9}`      {emojiAmmoA}      {emojiAmmoB}      {emojiAmmoF}      {emojiAmmoG}      {emojiAmmoR}      {emojiMoneyB}',
-                        value=f'`{msg_nbr: >9}` `{wallet.arrow: >4}` `{wallet.bolt: >4}` `{wallet.fuel: >4}` `{wallet.grenade: >4}` `{wallet.rocket: >4}` `{wallet.currency: >4}`',
+        name       = f'`{msg_shards: >9}`      '
+        name      += f'{emojiAmmoA}      '
+        name      += f'{emojiAmmoB}      '
+        name      += f'{emojiAmmoF}      '
+        name      += f'{emojiAmmoG}      '
+        name      += f'{emojiAmmoR}      '
+        name      += f'{emojiMoneyB}'
+        value      = f'`{msg_nbr: >9}` '
+        value     += f"`{stuff['wallet']['arrow']: >4}` "
+        value     += f"`{stuff['wallet']['bolt']: >4}` "
+        value     += f"`{stuff['wallet']['fuel']: >4}` "
+        value     += f"`{stuff['wallet']['grenade']: >4}` "
+        value     += f"`{stuff['wallet']['rocket']: >4}` "
+        value     += f"`{stuff['wallet']['currency']: >4}`"
+        embed.add_field(name   = name,
+                        value  = value,
                         inline = False)
 
         if isinstance(ctx.message.channel, discord.DMChannel):
