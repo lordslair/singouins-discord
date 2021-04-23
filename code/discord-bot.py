@@ -26,9 +26,6 @@ from utils.requests     import *
 from utils.pretty       import *
 from utils.redis        import *
 
-from mysql.methods.fn_creature import fn_creature_get
-from mysql.methods.fn_user     import fn_user_get_from_member
-
 # Log Internal imports
 print(f'{mynow()} [BOT] Internal imports [✓]')
 
@@ -120,7 +117,7 @@ async def register(ctx):
         # In a Channel
         pass
 
-    user = fn_user_get_from_member(member)
+    user = api_admin_user(discordname)
     if user:
         # Fetch the Discord role
         try:
@@ -149,7 +146,7 @@ async def register(ctx):
 
         # Apply Squad roles if needed
         guild = ctx.guild
-        pcs   = api_admin_mypc(discordname,None)
+        pcs   = api_admin_mypcs(discordname)
         if pcs:
             for pc in pcs:
                 squadid = pc['squad']
@@ -214,7 +211,7 @@ async def admin(ctx,*args):
         select = args[2]
         pcid   = int(args[3])
 
-        pc = fn_creature_get(None,pcid)[3]
+        pc = api_admin_mypc('Wukong',pcid)
         if pc is None:
             print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Unknown creature')
             await ctx.send(f'`Unknown creature pcid:{pcid}`')
@@ -331,7 +328,7 @@ async def mysingouins(ctx):
                  emojiRaceM,
                  emojiRaceO]
 
-    pcs = api_admin_mypc(discordname,None)
+    pcs = api_admin_mypcs(discordname)
     if pcs is None:
         await ctx.send(f'`No Singouin found in DB`')
         print(f'{mynow()} [{ctx.message.channel}][{member}] └──> No Singouin found in DB')
