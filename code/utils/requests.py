@@ -29,6 +29,18 @@ def api_admin_user(discordname):
     else:
         return None
 
+def api_admin_user_validate(discordname, usermail):
+    url      = f'{API_URL}/admin/user/validate'
+    payload  = {'discordname': discordname, 'usermail': usermail}
+    headers  = json.loads('{"Authorization": "Bearer '+ API_ADMIN_TOKEN + '"}')
+    response = requests.post(url, json = payload, headers=headers)
+
+    if response.status_code == 200:
+        if response.text:
+            return json.loads(response.text)['success']
+    else:
+        return None
+
 def api_admin_mypc(discordname,pcid):
     url      = f'{API_URL}/admin/mypc'
     payload  = {'discordname': discordname, 'pcid': pcid}

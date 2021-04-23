@@ -78,8 +78,8 @@ async def register(ctx, usermail: str = None):
         return
 
     # Validate user association in DB
-    user = query_user_validate(usermail,discordname)
-    if user:
+    validation = api_admin_user_validate(discordname, usermail)
+    if validation:
         # Send registered DM to user
         answer = msg_register_ok.format(ctx.message.author)
         await ctx.message.author.send(answer)
