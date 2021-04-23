@@ -8,9 +8,7 @@ RUN apk update --no-cache \
     && apk add --no-cache python3 py3-pip \
     && apk add --no-cache --virtual .build-deps \
                                     gcc \
-                                    g++ \
                                     libc-dev \
-                                    libffi-dev \
                                     python3-dev \
                                     tzdata \
     && pip3 --no-cache-dir install -U -r /requirements.txt \

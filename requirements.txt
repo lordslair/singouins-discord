@@ -1,7 +1,4 @@
-dataclasses               ~= 0.6
 discord.py                ~= 1.5
-pyMySQL                   ~= 1.0
 redis                     ~= 3.5
 requests                  ~= 2.25
-SQLAlchemy                ~= 1.3
 yarqueue                  == 0.4.1
