@@ -78,6 +78,31 @@ def api_admin_squad(squadid):
     else:
         return None
 
+def api_admin_korp(korpid):
+    url      = f'{API_URL}/admin/korp'
+    payload  = {'korpid': korpid}
+    headers  = json.loads('{"Authorization": "Bearer '+ API_ADMIN_TOKEN + '"}')
+    response = requests.post(url, json = payload, headers=headers)
+
+    if response.status_code == 200:
+        if response.text:
+            if json.loads(response.text)['success']:
+                return json.loads(response.text)['payload']
+    else:
+        return None
+
+def api_admin_korps():
+    url      = f'{API_URL}/admin/korps'
+    headers  = json.loads('{"Authorization": "Bearer '+ API_ADMIN_TOKEN + '"}')
+    response = requests.post(url, headers=headers)
+
+    if response.status_code == 200:
+        if response.text:
+            if json.loads(response.text)['success']:
+                return json.loads(response.text)['payload']
+    else:
+        return None
+
 def api_admin_mypc_pa(discordname,pcid,redpa,bluepa):
     url      = f'{API_URL}/admin/mypc/pa'
     payload  = {'discordname': discordname, 'pcid': pcid, 'redpa': redpa, 'bluepa': bluepa}

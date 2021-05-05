@@ -148,15 +148,36 @@ async def register(ctx):
         pcs   = api_admin_mypcs(discordname)
         if pcs:
             for pc in pcs:
-                squadid = pc['squad']
+                # Korp management
+                korpid = pc['korp']
+                # We need to skip pc when he is not in a korp
+                if korpid is None:
+                    continue
+                # Add the korp role to the user
+                print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Korp detected (korpid:{korpid})')
+                try:
+                    role = discord.utils.get(guild.roles, name=f'Korp-{korpid}')
+                except:
+                    print(f'{mynow()} [{ctx.message.channel}][{member}]    └──> get-role:Korp-{korpid} Failed')
+                else:
+                    print(f'{mynow()} [{ctx.message.channel}][{member}]    └──> get-role:Korp-{korpid} Successed')
+                    if role in member.roles:
+                        print(f'{mynow()} [{ctx.message.channel}][{member}]        └──> add-role:Korp-{korpid} already exists')
+                    else:
+                        try:
+                            await ctx.author.add_roles(role)
+                        except:
+                            print(f'{mynow()} [{ctx.message.channel}][{member}]        └──> add-role:Korp-{korpid} Failed')
+                        else:
+                            print(f'{mynow()} [{ctx.message.channel}][{member}]        └──> add-role:Korp-{korpid} Successed')
 
+                # Squad management
+                squadid = pc['squad']
                 # We need to skip pc when he is not in a squad
                 if squadid is None:
                     continue
-
-                print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Squad detected (squadid:{squadid})')
-
                 # Add the squad role to the user
+                print(f'{mynow()} [{ctx.message.channel}][{member}] └──> Squad detected (squadid:{squadid})')
                 try:
                     role = discord.utils.get(guild.roles, name=f'Squad-{squadid}')
                 except:
@@ -727,10 +748,98 @@ async def squad_channel_create(timer):
                         print(f"{mynow()} [{channel_name}] [BOT]    └──> Squad channel creation successed (Squads/Squad-{squad['id']})")
         await asyncio.sleep(timer)
 
+async def korp_channel_cleanup(timer):
+    while client.is_ready:
+        for guild in client.guilds:
+            for channel in guild.text_channels:
+                m = re.search(r"^korp-(?P<korpid>\d+)", channel.name)
+                if m is not None:
+                    korpid = int(m.group('korpid'))
+                    if api_admin_korp(korpid):
+                        # The korp does exist in DB
+                        pass
+                    else:
+                        # The korp does not exist in DB
+                        print(f'{mynow()} [{channel.name}] [BOT] ───> Found Korp channel unused')
+                        # We try to delete the unused channel
+                        try:
+                            await channel.delete()
+                        except Exception as e:
+                            print(f'{mynow()} [{channel.name}] [BOT]    └──> Korp channel deletion failed')
+                        else:
+                            print(f'{mynow()} [{channel.name}] [BOT]    └──> Korp channel deletion successed')
+                        # We try to delete the unused role
+                        try:
+                            role = discord.utils.get(guild.roles, name=f'Korp-{korpid}')
+                            if role:
+                                await role.delete()
+                        except Exception as e:
+                            print(f'{mynow()} [{channel.name}] [BOT]    └──> Korp role deletion failed')
+                        else:
+                            print(f'{mynow()} [{channel.name}] [BOT]    └──> Korp role deletion successed')
+        await asyncio.sleep(timer)
+
+async def korp_channel_create(timer):
+    while client.is_ready:
+        for guild in client.guilds:
+            admin_role = discord.utils.get(guild.roles, name='Team')
+            category   = discord.utils.get(guild.categories, name='Korps')
+            korps      = api_admin_korps()
+
+            # We skip the loop if no squads are returned
+            if korps is None:
+                continue
+
+            for korp in korps:
+                channel_name = f"Korp-{korp['id']}".lower()
+                channel      = discord.utils.get(client.get_all_channels(), name=channel_name)
+                if channel:
+                    # Squad channel already exists
+                    pass
+                else:
+                    # Squad channel do not exists
+                    print(f'{mynow()} [{channel_name}] [BOT] ───> Korp channel to add')
+
+                    # Check role existence
+                    if discord.utils.get(guild.roles, name=f"Korp-{korp['id']}"):
+                        # Role already exists, do nothing
+                        print(f"{mynow()} [{channel_name}] [BOT]    └──> Korp role already exists (squadid:{korp['id']})")
+                    else:
+                        # Role do not exist, create it
+                        try:
+                            korp_role = await guild.create_role(name=f"Korp-{korp['id']}",
+                                                                mentionable=True,
+                                                                permissions=discord.Permissions.none())
+                        except:
+                            print(f"{mynow()} [{channel_name}] [BOT]    └──> Korp role creation failed (korpid:{korp['id']})")
+                        else:
+                            print(f"{mynow()} [{channel_name}] [BOT]    └──> Korp role creation successed (korpid:{korp['id']})")
+
+                    # Create channel
+                    try:
+                        squad_role = discord.utils.get(guild.roles, name=f"Korp-{korp['id']}")
+                        overwrites    = {
+                            guild.default_role: discord.PermissionOverwrite(read_messages=False),
+                            guild.me: discord.PermissionOverwrite(read_messages=True),
+                            admin_role: discord.PermissionOverwrite(read_messages=True),
+                            korp_role: discord.PermissionOverwrite(read_messages=True)
+                        }
+                        mykorpchannel = await guild.create_text_channel(f"Korp-{korp['id']}",
+                                                                        category=category,
+                                                                        topic=f"Korp-{korp['id']}:<{korp['name']}>",
+                                                                        overwrites=overwrites)
+                    except:
+                        print(f"{mynow()} [{channel_name}] [BOT]    └──> Korp channel creation failed (Korps/korpid:{korp['id']})")
+                    else:
+                        print(f"{mynow()} [{channel_name}] [BOT]    └──> Korp channel creation successed (Korps/Korp-{korp['id']})")
+        await asyncio.sleep(timer)
+
 # 3600s Tasks (@Hourly)
 client.loop.create_task(squad_channel_cleanup(3600))
+client.loop.create_task(korp_channel_cleanup(3600))
 # 300s Tasks (@5Minutes)
 client.loop.create_task(squad_channel_create(300))
+client.loop.create_task(korp_channel_create(300))
 # 60s Tasks (@1Minute)
 client.loop.create_task(yqueue_check(60))
 # Run Discord client
