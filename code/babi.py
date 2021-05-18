@@ -3,7 +3,7 @@
 
 import re
 
-from datetime           import datetime,timedelta
+from datetime           import datetime
 
 # Shorted definition for actual now() with proper format
 def mynow(): return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -19,11 +19,10 @@ from discord.ext        import commands
 # Log Discord imports
 print(f'{mynow()} [BOT] Discord  imports [✓]')
 
-from variables          import *
+from variables          import token, API_URL
 from utils.messages     import *
 from utils.requests     import *
 from utils.pretty       import *
-from utils.redis        import *
 
 # Log Internal imports
 print(f'{mynow()} [BOT] Internal imports [✓]')
