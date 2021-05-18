@@ -15,5 +15,3 @@ RUN apk update --no-cache \
     && cp /usr/share/zoneinfo/Europe/Paris /etc/localtime \
     && apk del .build-deps \
     && rm /requirements.txt
-
-ENTRYPOINT ["/code/discord-bot.py"]
